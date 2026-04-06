@@ -20,20 +20,32 @@ class Settings(BaseSettings):
     streamlit_port: int = Field(default=8501, alias="STREAMLIT_PORT")
     app_base_url: str = Field(default="http://localhost:8080", alias="APP_BASE_URL")
     trading_video_file_id: str | None = Field(default=None, alias="TRADING_VIDEO_FILE_ID")
-    first_signal_text: str = Field(default="XAUUSD BUY, Entry: 2320.50, Stop Loss: 2315.00, Take Profit 1: 2325.00, Take Profit 2: 2330.00, Risk: 1.0%", alias="FIRST_SIGNAL_TEXT")
+    first_signal_text: str = Field(
+        default="XAUUSD BUY, Entry: 2320.50, Stop Loss: 2315.00, Take Profit 1: 2325.00, Take Profit 2: 2330.00, Risk: 1.0%",
+        alias="FIRST_SIGNAL_TEXT"
+    )
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # 🔴 THIS LINE FIXES YOUR PROBLEM
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
 
     @field_validator("admin_chat_ids", mode="before")
     @classmethod
     def parse_admin_chat_ids(cls, value):
         if value in (None, "", []):
             return []
+
         if isinstance(value, list):
             return [int(v) for v in value]
+
         text = str(value).strip()
+
         if text.startswith("[") and text.endswith("]"):
             text = text[1:-1]
+
         return [int(part.strip()) for part in text.split(",") if part.strip()]
 
     @property

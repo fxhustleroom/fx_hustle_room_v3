@@ -2,6 +2,7 @@ from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -16,6 +17,7 @@ router = Router()
 
 @router.message(CommandStart())
 async def start_handler(message: Message, state: FSMContext, session: AsyncSession) -> None:
+    logger.info(f"Start command received from user {message.from_user.id}")
     language_code = TELEGRAM_TO_SUPPORTED.get((message.from_user.language_code or "").split("-")[0], settings.default_language)
     await get_or_create_user(
         session,

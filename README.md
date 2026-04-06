@@ -97,7 +97,7 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8080/webhook/signal -Conten
 
 ## Example signal format
 ```text
-XAUUSD BUY
+XAUUSD BUY, Entry: 2320.50, Stop Loss: 2315.00, Take Profit 1: 2325.00, Take Profit 2: 2330.00, Risk: 1.0%
 
 Entry: 2320.50
 Stop Loss: 2315.00
