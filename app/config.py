@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import List
-import os
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -21,7 +20,7 @@ class Settings(BaseSettings):
     streamlit_port: int = Field(default=8501, alias="STREAMLIT_PORT")
     app_base_url: str = Field(default="http://localhost:8080", alias="APP_BASE_URL")
     trading_video_file_id: str | None = Field(default=None, alias="TRADING_VIDEO_FILE_ID")
-    first_signal_text: str = Field(default="XAUUSD BUY", alias="FIRST_SIGNAL_TEXT")
+    first_signal_text: str = Field(default="XAUUSD BUY, Entry: 2320.50, Stop Loss: 2315.00, Take Profit 1: 2325.00, Take Profit 2: 2330.00, Risk: 1.0%", alias="FIRST_SIGNAL_TEXT")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
@@ -45,9 +44,4 @@ class Settings(BaseSettings):
         self.upload_path.mkdir(parents=True, exist_ok=True)
 
 
-        try:
-            import streamlit as st
-            env_values = {k: v for k, v in st.secrets.items()}
-            settings = Settings(**env_values)
-        except Exception:
-            settings = Settings()
+settings = Settings()
