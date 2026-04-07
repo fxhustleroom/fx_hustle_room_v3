@@ -1,14 +1,14 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     bot_token: str = Field(alias="BOT_TOKEN")
     database_url: str = Field(alias="DATABASE_URL")
-    database_sync_url: str = Field(alias="DATABASE_SYNC_URL")
+    database_sync_url: Optional[str] = Field(default=None, alias="DATABASE_SYNC_URL")
     admin_chat_ids: List[int] = Field(default_factory=list, alias="ADMIN_CHAT_IDS")
     premium_group_id: int = Field(alias="PREMIUM_GROUP_ID")
     premium_group_invite_link: str | None = Field(default=None, alias="PREMIUM_GROUP_INVITE_LINK")
@@ -31,6 +31,14 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore"
     )
+
+    @model_validator(mode="after")
+    def derive_sync_url(self) -> "Settings":
+        if not self.database_sync_url:
+            self.database_sync_url = self.database_url.replace(
+                "postgresql+asyncpg://", "postgresql://"
+            )
+        return self
 
     @field_validator("admin_chat_ids", mode="before")
     @classmethod
