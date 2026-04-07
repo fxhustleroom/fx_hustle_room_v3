@@ -115,6 +115,7 @@ async def run_api() -> None:
 # --------------------------------------------------
 
 async def main() -> None:
+    await bot.delete_webhook(drop_pending_updates=True)
 
     await init_db()
 
