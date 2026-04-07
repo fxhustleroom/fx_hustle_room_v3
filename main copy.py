@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import os
 from contextlib import asynccontextmanager
 
@@ -9,14 +8,16 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.middlewares.db import DbSessionMiddleware
 from app.config import settings
 from app.db import AsyncSessionLocal, init_db
-from app.handlers import admin, onboarding, start
+from app.handlers.start import router as start_router
+from app.handlers.onboarding import router as onboarding_router
+from app.handlers.admin import router as admin_router
 from app.handlers.signals import IncomingSignal, persist_signal, send_signal_to_premium_group
 
 # --------------------------------------------------
@@ -39,9 +40,9 @@ bot = Bot(
 
 dp = Dispatcher(storage=MemoryStorage())
 
-dp.include_router(start.router)
-dp.include_router(onboarding.router)
-dp.include_router(admin.router)
+dp.include_router(start_router)
+dp.include_router(onboarding_router)
+dp.include_router(admin_router)
 
 dp.update.middleware(DbSessionMiddleware())
 
@@ -58,14 +59,20 @@ async def get_db_session():
 # --------------------------------------------------
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(app: FastAPI):
+
     try:
         await init_db()
         logger.info("Database initialized")
     except Exception as exc:
-        logger.warning(
-            "Database initialization failed on startup (will retry on first use): {}", exc
-        )
+        logger.warning(f"Database initialization failed: {exc}")
+
+    # SET TELEGRAM WEBHOOK
+    webhook_url = f"{settings.app_base_url}/telegram/webhook"
+    await bot.set_webhook(webhook_url)
+
+    logger.info(f"Webhook set to {webhook_url}")
+
     yield
 
 # --------------------------------------------------
@@ -73,19 +80,36 @@ async def lifespan(_: FastAPI):
 # --------------------------------------------------
 
 app = FastAPI(
-    title="FX Hustle Room Webhook API",
+    title="FX Hustle Room API",
     lifespan=lifespan
 )
 
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health():
     return {"status": "ok"}
+
+# --------------------------------------------------
+# TELEGRAM WEBHOOK
+# --------------------------------------------------
+
+@app.post("/telegram/webhook")
+async def telegram_webhook(request: Request):
+
+    update = await request.json()
+
+    await dp.feed_webhook_update(bot, update)
+
+    return {"ok": True}
+
+# --------------------------------------------------
+# TRADING SIGNAL WEBHOOK
+# --------------------------------------------------
 
 @app.post("/webhook/signal")
 async def webhook_signal(
     payload: IncomingSignal,
     session: AsyncSession = Depends(get_db_session)
-) -> dict[str, str | int]:
+):
 
     signal = await persist_signal(session, payload)
 
@@ -97,49 +121,16 @@ async def webhook_signal(
     }
 
 # --------------------------------------------------
-# API server runner (Railway compatible)
-# --------------------------------------------------
-
-async def run_api() -> None:
-
-    port = int(os.getenv("PORT", settings.webhook_port))
-
-    config = uvicorn.Config(
-        app,
-        host="0.0.0.0",
-        port=port,
-        log_level="info"
-    )
-
-    server = uvicorn.Server(config)
-
-    await server.serve()
-
-# --------------------------------------------------
-# Main runner
-# --------------------------------------------------
-
-async def main() -> None:
-    await bot.delete_webhook(drop_pending_updates=True)
-
-    try:
-        await init_db()
-        logger.info("Database initialized")
-    except Exception as exc:
-        logger.warning(
-            "Database initialization failed on startup (will retry on first use): {}", exc
-        )
-
-    logger.info("Starting Telegram bot polling and webhook API")
-
-    await asyncio.gather(
-        dp.start_polling(bot),
-        run_api(),
-    )
-
-# --------------------------------------------------
-# Entry point
+# Start server
 # --------------------------------------------------
 
 if __name__ == "__main__":
-    asyncio.run(main())
+
+    port = int(os.getenv("PORT", settings.webhook_port))
+
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False
+    )
