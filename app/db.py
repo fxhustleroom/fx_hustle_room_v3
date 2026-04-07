@@ -4,9 +4,8 @@ import json
 from collections.abc import AsyncGenerator
 from typing import Any
 
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.models import AppSetting, Base, Event, User
@@ -14,12 +13,6 @@ from app.models import AppSetting, Base, Event, User
 
 async_engine = create_async_engine(settings.database_url, echo=False, future=True)
 AsyncSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False, class_=AsyncSession)
-
-sync_engine = create_engine(settings.database_sync_url, future=True)
-
-
-def get_sync_session() -> Session:
-    return Session(sync_engine)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

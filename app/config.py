@@ -8,7 +8,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     bot_token: str = Field(alias="BOT_TOKEN")
     database_url: str = Field(alias="DATABASE_URL")
-    database_sync_url: str = Field(alias="DATABASE_SYNC_URL")
     admin_chat_ids: List[int] = Field(default_factory=list, alias="ADMIN_CHAT_IDS")
     premium_group_id: int = Field(alias="PREMIUM_GROUP_ID")
     premium_group_invite_link: str | None = Field(default=None, alias="PREMIUM_GROUP_INVITE_LINK")
