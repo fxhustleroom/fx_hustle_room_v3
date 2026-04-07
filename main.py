@@ -59,8 +59,13 @@ async def get_db_session():
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    await init_db()
-    logger.info("Database initialized")
+    try:
+        await init_db()
+        logger.info("Database initialized")
+    except Exception as exc:
+        logger.warning(
+            "Database initialization failed on startup (will retry on first use): {}", exc
+        )
     yield
 
 # --------------------------------------------------
@@ -116,7 +121,13 @@ async def run_api() -> None:
 
 async def main() -> None:
 
-    await init_db()
+    try:
+        await init_db()
+        logger.info("Database initialized")
+    except Exception as exc:
+        logger.warning(
+            "Database initialization failed on startup (will retry on first use): {}", exc
+        )
 
     logger.info("Starting Telegram bot polling and webhook API")
 
