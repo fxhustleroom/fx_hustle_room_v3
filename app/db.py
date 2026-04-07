@@ -10,9 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.config import settings
 from app.models import AppSetting, Base, Event, User
 
+database_url = settings.database_url.replace(
+    "postgresql://", "postgresql+asyncpg://"
+)
 
-async_engine = create_async_engine(settings.database_url, echo=False, future=True)
-AsyncSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False, class_=AsyncSession)
+async_engine = create_async_engine(database_url, echo=False, future=True)
+AsyncSessionLocal = async_sessionmaker(async_engine, expire_on_commit=False)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
