@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 from contextlib import asynccontextmanager
 
@@ -8,7 +9,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -57,20 +58,14 @@ async def get_db_session():
 # --------------------------------------------------
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-
+async def lifespan(_: FastAPI):
     try:
         await init_db()
         logger.info("Database initialized")
     except Exception as exc:
-        logger.warning(f"Database initialization failed: {exc}")
-
-    # SET TELEGRAM WEBHOOK
-    webhook_url = f"{settings.app_base_url}/telegram/webhook"
-    await bot.set_webhook(webhook_url)
-
-    logger.info(f"Webhook set to {webhook_url}")
-
+        logger.warning(
+            "Database initialization failed on startup (will retry on first use): {}", exc
+        )
     yield
 
 # --------------------------------------------------
@@ -78,36 +73,19 @@ async def lifespan(app: FastAPI):
 # --------------------------------------------------
 
 app = FastAPI(
-    title="FX Hustle Room API",
+    title="FX Hustle Room Webhook API",
     lifespan=lifespan
 )
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     return {"status": "ok"}
-
-# --------------------------------------------------
-# TELEGRAM WEBHOOK
-# --------------------------------------------------
-
-@app.post("/telegram/webhook")
-async def telegram_webhook(request: Request):
-
-    update = await request.json()
-
-    await dp.feed_webhook_update(bot, update)
-
-    return {"ok": True}
-
-# --------------------------------------------------
-# TRADING SIGNAL WEBHOOK
-# --------------------------------------------------
 
 @app.post("/webhook/signal")
 async def webhook_signal(
     payload: IncomingSignal,
     session: AsyncSession = Depends(get_db_session)
-):
+) -> dict[str, str | int]:
 
     signal = await persist_signal(session, payload)
 
@@ -119,16 +97,49 @@ async def webhook_signal(
     }
 
 # --------------------------------------------------
-# Start server
+# API server runner (Railway compatible)
 # --------------------------------------------------
 
-if __name__ == "__main__":
+async def run_api() -> None:
 
     port = int(os.getenv("PORT", settings.webhook_port))
 
-    uvicorn.run(
-        "main:app",
+    config = uvicorn.Config(
+        app,
         host="0.0.0.0",
         port=port,
-        reload=False
+        log_level="info"
     )
+
+    server = uvicorn.Server(config)
+
+    await server.serve()
+
+# --------------------------------------------------
+# Main runner
+# --------------------------------------------------
+
+async def main() -> None:
+    await bot.delete_webhook(drop_pending_updates=True)
+
+    try:
+        await init_db()
+        logger.info("Database initialized")
+    except Exception as exc:
+        logger.warning(
+            "Database initialization failed on startup (will retry on first use): {}", exc
+        )
+
+    logger.info("Starting Telegram bot polling and webhook API")
+
+    await asyncio.gather(
+        dp.start_polling(bot),
+        run_api(),
+    )
+
+# --------------------------------------------------
+# Entry point
+# --------------------------------------------------
+
+if __name__ == "__main__":
+    asyncio.run(main())
