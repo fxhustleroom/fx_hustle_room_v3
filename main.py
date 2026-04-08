@@ -21,6 +21,7 @@ from app.handlers.onboarding import router as onboarding_router
 from app.handlers.admin import router as admin_router
 from app.handlers.signals import IncomingSignal, persist_signal, send_signal_to_premium_group
 
+
 # --------------------------------------------------
 # Setup
 # --------------------------------------------------
@@ -29,6 +30,7 @@ settings.ensure_dirs()
 
 logger.remove()
 logger.add(lambda msg: print(msg, end=""), level=settings.log_level)
+
 
 # --------------------------------------------------
 # Telegram bot
@@ -47,6 +49,7 @@ dp.include_router(admin_router)
 
 dp.update.middleware(DbSessionMiddleware())
 
+
 # --------------------------------------------------
 # Database dependency
 # --------------------------------------------------
@@ -55,6 +58,7 @@ async def get_db_session():
     async with AsyncSessionLocal() as session:
         yield session
 
+
 # --------------------------------------------------
 # FastAPI lifespan
 # --------------------------------------------------
@@ -62,31 +66,50 @@ async def get_db_session():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
+    # Init DB
     try:
         await init_db()
         logger.info("Database initialized")
     except Exception as exc:
         logger.warning(f"Database initialization failed: {exc}")
 
+    polling_task = None
+
     # -----------------------------
-    # WEBHOOK (production)
+    # PRODUCTION → WEBHOOK
     # -----------------------------
     if settings.app_base_url.startswith("https"):
+
         webhook_url = f"{settings.app_base_url}/telegram/webhook"
 
+        await bot.delete_webhook(drop_pending_updates=True)
         await bot.set_webhook(webhook_url)
 
-        logger.info(f"Webhook set to {webhook_url}")
+        logger.info(f"Webhook set: {webhook_url}")
 
     # -----------------------------
-    # POLLING (local development)
+    # LOCAL DEV → POLLING
     # -----------------------------
     else:
+
         logger.info("Running locally — starting polling")
 
-        asyncio.create_task(dp.start_polling(bot))
+        await bot.delete_webhook(drop_pending_updates=True)
+
+        polling_task = asyncio.create_task(dp.start_polling(bot))
 
     yield
+
+    # -----------------------------
+    # Shutdown
+    # -----------------------------
+    logger.info("Shutting down bot")
+
+    if polling_task:
+        polling_task.cancel()
+
+    await bot.session.close()
+
 
 # --------------------------------------------------
 # FastAPI app
@@ -97,9 +120,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
 
 # --------------------------------------------------
 # TELEGRAM WEBHOOK
@@ -113,6 +138,7 @@ async def telegram_webhook(request: Request):
     await dp.feed_webhook_update(bot, update)
 
     return {"ok": True}
+
 
 # --------------------------------------------------
 # TRADING SIGNAL WEBHOOK
@@ -132,6 +158,7 @@ async def webhook_signal(
         "status": "ok",
         "signal_id": signal.id
     }
+
 
 # --------------------------------------------------
 # Start server
