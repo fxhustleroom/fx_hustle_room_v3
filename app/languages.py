@@ -9,6 +9,7 @@ LANGUAGES = {
     "id": "Bahasa Indonesia 🇮🇩",
     "tr": "Türkçe 🇹🇷",
     "ru": "Русский 🇷🇺",
+    "nl": "Nederlands 🇳🇱",  # ✅ added
 }
 
 TELEGRAM_TO_SUPPORTED = {
@@ -22,4 +23,5 @@ TELEGRAM_TO_SUPPORTED = {
     "id": "id",
     "tr": "tr",
     "ru": "ru",
+    "nl": "nl",  # ✅ added
 }

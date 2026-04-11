@@ -17,18 +17,20 @@ TEXTS = {
         "id": "Silakan pilih bahasa Anda:",
         "tr": "Lütfen dilinizi seçin:",
         "ru": "Пожалуйста, выберите язык:",
+        "nl": "Kies uw taal:",  # ✅ ADD
     },
     "welcome": {
-        "en": "Welcome to The FX Hustle Room Exclusive Trading Alerts.\n\nGet premium forex and gold trade ideas, structured onboarding, and access to our private signals room.",
-        "es": "Bienvenido a The FX Hustle Room Exclusive Trading Alerts.\n\nObtén ideas premium de trading en forex y oro, onboarding estructurado y acceso a nuestra sala privada de señales.",
-        "fr": "Bienvenue sur The FX Hustle Room Exclusive Trading Alerts.\n\nRecevez des idées premium de trading forex et or, un parcours d'intégration structuré et l'accès à notre salle privée de signaux.",
-        "de": "Willkommen bei The FX Hustle Room Exclusive Trading Alerts.\n\nErhalte Premium-Ideen für Forex- und Gold-Trades, ein strukturiertes Onboarding und Zugang zu unserem privaten Signalraum.",
-        "pt": "Bem-vindo ao The FX Hustle Room Exclusive Trading Alerts.\n\nReceba ideias premium de trade em forex e ouro, onboarding estruturado e acesso à nossa sala privada de sinais.",
-        "ar": "مرحبًا بك في The FX Hustle Room Exclusive Trading Alerts.\n\nاحصل على أفكار تداول مميزة للفوركس والذهب، ومسار انضمام منظم، ووصول إلى غرفة الإشارات الخاصة بنا.",
-        "hi": "The FX Hustle Room Exclusive Trading Alerts में आपका स्वागत है।\n\nप्रीमियम फॉरेक्स और गोल्ड ट्रेड आइडियाज़, व्यवस्थित ऑनबोर्डिंग और हमारे प्राइवेट सिग्नल रूम तक पहुँच प्राप्त करें।",
-        "id": "Selamat datang di The FX Hustle Room Exclusive Trading Alerts.\n\nDapatkan ide trading forex dan emas premium, onboarding terstruktur, dan akses ke ruang sinyal privat kami.",
-        "tr": "The FX Hustle Room Exclusive Trading Alerts'e hoş geldiniz.\n\nPremium forex ve altın işlem fikirleri, yapılandırılmış onboarding ve özel sinyal odamıza erişim elde edin.",
-        "ru": "Добро пожаловать в The FX Hustle Room Exclusive Trading Alerts.\n\nПолучайте премиальные идеи по торговле на форекс и золоте, структурированный онбординг и доступ в нашу приватную комнату сигналов.",
+        "en": "Welcome to The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ You now have access to our Exclusive Forex & Gold trade ideas, a structured onboarding path, and our private alert room.\n\nLet’s start with your onboarding.",
+        "es": "Bienvenido a The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ Ahora tienes acceso a nuestras ideas exclusivas de trading en Forex y Oro, un proceso de incorporación estructurado y nuestra sala privada de alertas.\n\nComencemos con tu onboarding.",
+        "fr": "Bienvenue sur The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ Vous avez maintenant accès à nos idées exclusives de trading Forex et Or, un parcours d’intégration structuré et notre salle privée d’alertes.\n\nCommençons votre onboarding.",
+        "de": "Willkommen bei The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ Du hast jetzt Zugang zu unseren exklusiven Forex- und Gold-Trading-Ideen, einem strukturierten Onboarding-Prozess und unserem privaten Signalraum.\n\nLass uns mit deinem Onboarding beginnen.",
+        "pt": "Bem-vindo ao The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ Agora você tem acesso às nossas ideias exclusivas de trading em Forex e Ouro, um processo de onboarding estruturado e nossa sala privada de alertas.\n\nVamos começar com seu onboarding.",
+        "ar": "مرحبًا بك في The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ لديك الآن وصول إلى أفكار تداول الفوركس والذهب الحصرية لدينا، ومسار إعداد منظم، وغرفة التنبيهات الخاصة بنا.\n\nلنبدأ عملية الإعداد.",
+        "hi": "The FX Hustle Room Exclusive Trading Alerts में आपका स्वागत है।\n\n➡️ अब आपके पास हमारे एक्सक्लूसिव फॉरेक्स और गोल्ड ट्रेड आइडियाज़, एक संरचित ऑनबोर्डिंग प्रक्रिया और हमारे प्राइवेट अलर्ट रूम तक पहुंच है।\n\nआइए आपका ऑनबोर्डिंग शुरू करें।",
+        "id": "Selamat datang di The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ Sekarang Anda memiliki akses ke ide trading Forex & Emas eksklusif kami, alur onboarding terstruktur, dan ruang alert privat kami.\n\nMari mulai onboarding Anda.",
+        "tr": "The FX Hustle Room Exclusive Trading Alerts'e hoş geldiniz.\n\n➡️ Artık özel Forex ve Altın işlem fikirlerimize, yapılandırılmış bir onboarding sürecine ve özel sinyal odamıza erişiminiz var.\n\nOnboarding sürecinize başlayalım.",
+        "ru": "Добро пожаловать в The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ Теперь у вас есть доступ к нашим эксклюзивным торговым идеям по Forex и золоту, структурированному онбордингу и нашей приватной комнате сигналов.\n\nДавайте начнем ваше онбординг.",
+        "nl": "Welkom bij The FX Hustle Room Exclusive Trading Alerts.\n\n➡️ Je hebt nu toegang tot onze exclusieve Forex- en goud handelsideeën, een gestructureerd onboardingproces en onze privé alertgroep.\n\nLaten we beginnen met je onboarding.",  # ✅ ADD
     },
     "terms": {
         "en": "Please read and accept our Rules & Terms to continue.\n⚠️ Trading involves risk. You are responsible for your own decisions.",
@@ -41,6 +43,7 @@ TEXTS = {
         "id": "Silakan baca dan setujui Aturan & Ketentuan kami untuk melanjutkan.\n⚠️ Trading memiliki risiko. Anda bertanggung jawab atas keputusan Anda sendiri.",
         "tr": "Devam etmek için lütfen Kurallarımızı ve Şartlarımızı okuyup kabul edin.\n⚠️ İşlem yapmak risk içerir. Kendi kararlarınızdan siz sorumlusunuz.",
         "ru": "Пожалуйста, прочитайте и примите наши Правила и Условия, чтобы продолжить.\n⚠️ Торговля связана с риском. Вы несете ответственность за свои решения.",
+        "nl": "Lees en accepteer onze Regels en Voorwaarden om door te gaan.\n⚠️ Trading bevat risico's. U bent verantwoordelijk voor uw eigen beslissingen.",  # ✅ ADD
     },
     "create_account": _same("Create a trading account\n\nRegister with this link:\n👉 https://go.vtaffiliates.com/visit/?bta=42404&brand=vt\n\nRecommended platform: MetaTrader 5 (mobile app is fine)\nAccount Type: RAW-ECN\nAccount Currency: EUR"),
     "verify_identity": _same("Verify your identity\n\nComplete the identity verification (one-time only) to fully activate your account."),
