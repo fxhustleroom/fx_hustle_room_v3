@@ -45,19 +45,39 @@ TEXTS = {
         "ru": "Пожалуйста, прочитайте и примите наши Правила и Условия, чтобы продолжить.\n⚠️ Торговля связана с риском. Вы несете ответственность за свои решения.",
         "nl": "Lees en accepteer onze Regels en Voorwaarden om door te gaan.\n⚠️ Trading bevat risico's. U bent verantwoordelijk voor uw eigen beslissingen.",  # ✅ ADD
     },
-    "create_account": _same("Create a trading account\n\nRegister with this link:\n👉 https://go.vtaffiliates.com/visit/?bta=42404&brand=vt\n\nRecommended platform: MetaTrader 5 (mobile app is fine)\nAccount Type: RAW-ECN\nAccount Currency: EUR"),
-    "verify_identity": _same("Verify your identity\n\nComplete the identity verification (one-time only) to fully activate your account."),
-    "fund_account": _same("Step 3️⃣ — Fund your account\n\nTo trade XAUUSD using our execution model and required lot sizes, a minimum deposit of €350 is required.\n\n✅ Once deposited, your balance may be doubled (as per your broker offer), giving more flexibility."),
+    "create_account": _same(
+    "Step 1️⃣ — Create a live trading account:\n\n"
+    "Register with this link:\n"
+    "👉 https://go.vtaffiliates.com/visit/?bta=42404&brand=vt\n\n"
+    "Recommended platform: MetaTrader 5 (mobile app is fine)\n"
+    "Account Type: RAW-ECN\n"
+    "Account Currency: EUR"),
+    "verify_identity": _same(
+    "Step 2️⃣ — Verify your identity:\n\n"
+    "Complete the identity verification inside VT Markets (one-time only) to fully activate your account."
+    ),
+    "fund_account": _same(
+    "Step 3️⃣ — Fund your account:\n\n"
+    "To trade XAUUSD using our execution model and required lot sizes, a minimum deposit of €350 is required.\n\n"
+    "✅ After your deposit is confirmed, your balance will be doubled, providing you with additional capital to trade."
+),
     "upload_deposit_prompt": _same("Please upload a screenshot or PDF of your deposit proof."),
     "deposit_pending": _same("Your deposit proof is pending admin approval."),
-    "deposit_approved": _same("Your deposit has been approved Risk management is a critical aspect of trading. Before entering any trades, make sure you have reviewed the risk management module in your online training environment. Do you understand the importance of risk management? ."),
+    "deposit_approved": _same(
+    "Your deposit has been approved.\n\n"
+    "Risk management is a critical aspect of trading. Before entering any trades, make sure you have reviewed the risk management module in your online training environment.\n\n"
+    "Do you understand the importance of risk management?"
+),
     "deposit_rejected": _same("Your deposit proof was rejected. Please upload it again."),
     "risk": _same("Risk management is a critical aspect of trading.\n\nBefore entering any trades, make sure you have reviewed the risk management module in your online training environment.\n\nDo you understand the importance of risk management?"),
     "risk_no": _same("Risk management is the foundation of successful trading. make sure you understand this before placing your first trade. Next button below."),
     "signal_instruction": _same("Place this trade, then upload a screenshot proof of your executed trade."),
     "trade_upload_prompt": _same("Please upload a screenshot of your first executed trade."),
     "trade_rejected": _same("Your trade proof was rejected. Please upload the screenshot again."),
-    "premium_granted": _same("Premium access granted.\n\nClick below to join the premium signals group."),
+    "premium_granted": _same(
+    "Access to our Exclusive Trading Alerts is granted.\n\n"
+    "Click below to join now."
+),
     "unsupported_file": _same("Unsupported file. Please upload an image or PDF."),
     "status_waiting_deposit": _same("Your deposit is still pending approval."),
     "admin_deposit_caption": _same("New deposit proof submitted."),
