@@ -121,7 +121,7 @@ TEXTS = {
         "id": "Deposit Anda disetujui.\n\nManajemen risiko sangat penting.",
         "tr": "Yatırımınız onaylandı.\n\nRisk yönetimi çok önemlidir.",
         "ru": "Депозит подтвержден.\n\nУправление рисками очень важно.",
-        "nl": "Je storting is goedgekeurd.\n\nRisicobeheer is zeer belangrijk.",
+        "nl": "Je storting is goedgekeurd.\n\nRisicobeheer is een essentieel onderdeel van trading.\n\nVoordat je een trade plaatst, zorg ervoor dat je de risicobeheer module in je online trainingsomgeving hebt doorgenomen.\n\nBegrijp je het belang van risicobeheer?",
     },
     "deposit_rejected": {
         "en": "Your deposit proof was rejected. Please upload it again.",
