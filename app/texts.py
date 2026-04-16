@@ -139,16 +139,16 @@ TEXTS = {
 
 "risk": {
     "en": "Risk management is a critical aspect of trading.\n\nBefore entering any trades, make sure you have reviewed the risk management module in your online training environment.\n\nDo you understand the importance of risk management?",
-    "es": "La gestión de riesgo es clave.\n\n¿La entiendes?",
-    "fr": "La gestion du risque est essentielle.\n\nComprenez-vous cela ?",
-    "de": "Risikomanagement ist entscheidend.\n\nVerstehst du das?",
-    "pt": "Gestão de risco é essencial.\n\nVocê entende?",
-    "ar": "إدارة المخاطر مهمة.\n\nهل تفهم ذلك؟",
-    "hi": "रिस्क मैनेजमेंट जरूरी है।\n\nक्या आप समझते हैं?",
-    "id": "Manajemen risiko penting.\n\nApakah Anda paham?",
-    "tr": "Risk yönetimi önemlidir.\n\nAnlıyor musun?",
-    "ru": "Управление рисками важно.\n\nВы понимаете?",
-    "nl": "Risicobeheer is belangrijk.\n\nBegrijp je dit?",
+    "es": "La gestión del riesgo es un aspecto crítico del trading.\n\nAntes de realizar cualquier operación, asegúrate de haber revisado el módulo de gestión de riesgos en tu entorno de formación en línea.\n\n¿Entiendes la importancia de la gestión del riesgo?",
+    "fr": "La gestion des risques est un aspect essentiel du trading.\n\nAvant d’entrer dans une transaction, assurez-vous d’avoir consulté le module de gestion des risques dans votre environnement de formation en ligne.\n\nComprenez-vous l’importance de la gestion des risques ?",
+    "de": "Risikomanagement ist ein entscheidender Bestandteil des Tradings.\n\nBevor du Trades eingehst, stelle sicher, dass du das Risikomanagement-Modul in deiner Online-Trainingsumgebung durchgesehen hast.\n\nVerstehst du die Bedeutung des Risikomanagements?",
+    "pt": "A gestão de risco é um aspecto crítico do trading.\n\nAntes de realizar qualquer operação, certifique-se de ter revisado o módulo de gestão de risco em seu ambiente de treinamento online.\n\nVocê entende a importância da gestão de risco?",
+    "ar": "إدارة المخاطر هي جانب أساسي في التداول.\n\nقبل الدخول في أي صفقة، تأكد من مراجعة وحدة إدارة المخاطر في بيئة التدريب الخاصة بك.\n\nهل تفهم أهمية إدارة المخاطر؟",
+    "hi": "रिस्क मैनेजमेंट ट्रेडिंग का एक महत्वपूर्ण हिस्सा है।\n\nकिसी भी ट्रेड में प्रवेश करने से पहले, सुनिश्चित करें कि आपने अपने ऑनलाइन प्रशिक्षण वातावरण में रिस्क मैनेजमेंट मॉड्यूल की समीक्षा की है।\n\nक्या आप रिस्क मैनेजमेंट के महत्व को समझते हैं?",
+    "id": "Manajemen risiko adalah aspek penting dalam trading.\n\nSebelum melakukan transaksi apa pun, pastikan Anda telah mempelajari modul manajemen risiko di lingkungan pelatihan online Anda.\n\nApakah Anda memahami pentingnya manajemen risiko?",
+    "tr": "Risk yönetimi, tradingin kritik bir parçasıdır.\n\nHerhangi bir işlem yapmadan önce, çevrimiçi eğitim ortamınızdaki risk yönetimi modülünü incelediğinizden emin olun.\n\nRisk yönetiminin önemini anlıyor musunuz?",
+    "ru": "Управление рисками является важнейшей частью трейдинга.\n\nПеред открытием сделок убедитесь, что вы изучили модуль по управлению рисками в вашей обучающей платформе.\n\nПонимаете ли вы важность управления рисками?",
+    "nl": "Risicobeheer is een essentieel onderdeel van trading.\n\nVoordat je een trade plaatst, zorg ervoor dat je de risicobeheer module in je online trainingsomgeving hebt doorgenomen.\n\nBegrijp je het belang van risicobeheer?",
 },
 
 "risk_no": {
