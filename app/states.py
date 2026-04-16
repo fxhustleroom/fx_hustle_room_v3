@@ -10,8 +10,6 @@ class UserFlow(StatesGroup):
     waiting_deposit_proof = State()
     deposit_under_review = State()
     risk_step = State()
-    waiting_first_trade = State()
-    first_trade_under_review = State()
     premium_active = State()
 
 
