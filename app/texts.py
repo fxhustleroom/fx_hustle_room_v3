@@ -152,17 +152,17 @@ TEXTS = {
 },
 
 "risk_no": {
-    "en": "Risk management is the foundation of successful trading. Make sure you understand this before placing your first trade.",
-    "es": "La gestión de riesgo es clave antes de operar.",
-    "fr": "Comprenez le risque avant de trader.",
-    "de": "Verstehe Risiko vor dem Trading.",
-    "pt": "Entenda risco antes de operar.",
-    "ar": "افهم المخاطر أولاً.",
-    "hi": "पहले जोखिम समझें।",
-    "id": "Pahami risiko dulu.",
-    "tr": "Önce riski anla.",
-    "ru": "Сначала поймите риск.",
-    "nl": "Begrijp eerst risico.",
+  "en": "Risk management is the foundation of successful trading. Make sure you understand this before placing your first trade.",
+  "es": "La gestión de riesgos es la base del trading exitoso. Asegúrate de entender esto antes de realizar tu primera operación.",
+  "fr": "La gestion des risques est la base d’un trading réussi. Assurez-vous de bien comprendre cela avant d’effectuer votre première transaction.",
+  "de": "Risikomanagement ist die Grundlage für erfolgreiches Trading. Stelle sicher, dass du dies verstehst, bevor du deinen ersten Trade platzierst.",
+  "pt": "A gestão de risco é a base de um trading bem-sucedido. Certifique-se de entender isso antes de realizar sua primeira operação.",
+  "ar": "إدارة المخاطر هي أساس التداول الناجح. تأكد من فهم ذلك قبل إجراء أول صفقة لك.",
+  "hi": "रिस्क मैनेजमेंट सफल ट्रेडिंग की नींव है। अपनी पहली ट्रेड करने से पहले इसे अच्छी तरह समझ लें।",
+  "id": "Manajemen risiko adalah dasar dari trading yang sukses. Pastikan Anda memahaminya sebelum melakukan transaksi pertama Anda.",
+  "tr": "Risk yönetimi başarılı tradingin temelidir. İlk işleminizi yapmadan önce bunu anladığınızdan emin olun.",
+  "ru": "Управление рисками — основа успешной торговли. Убедитесь, что вы понимаете это перед тем, как совершить свою первую сделку.",
+  "nl": "Risicobeheer is de basis van succesvol handelen. Zorg ervoor dat je dit begrijpt voordat je je eerste transactie uitvoert."
 },
 
 "ready_to_trade": {
