@@ -21,7 +21,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-engine = create_engine(settings.database_sync_url, future=True)
+engine = create_engine(settings.database_url, future=True)
 
 
 st.markdown(
