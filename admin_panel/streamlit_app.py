@@ -122,34 +122,6 @@ st.markdown(
         line-height: 1.6;
     }
 
-    .badge {
-        display: inline-block;
-        padding: 0.28rem 0.62rem;
-        border-radius: 999px;
-        font-size: 0.76rem;
-        font-weight: 700;
-        margin-right: 6px;
-        margin-top: 4px;
-    }
-
-    .badge-ok {
-        background: rgba(27, 212, 164, 0.14);
-        color: #7cf7d4;
-        border: 1px solid rgba(124, 247, 212, 0.20);
-    }
-
-    .badge-warn {
-        background: rgba(255, 183, 77, 0.12);
-        color: #ffce73;
-        border: 1px solid rgba(255, 183, 77, 0.18);
-    }
-
-    .badge-danger {
-        background: rgba(255, 90, 95, 0.12);
-        color: #ff8a8f;
-        border: 1px solid rgba(255, 90, 95, 0.20);
-    }
-
     .stTextInput > div > div > input,
     .stNumberInput input,
     .stSelectbox div[data-baseweb="select"] > div {
@@ -248,7 +220,11 @@ def metric_counts() -> tuple[int, int, int, int, int]:
         pending_deposits = session.scalar(
             select(func.count()).select_from(User).where(
                 User.deposit_confirmed.is_(False),
-                User.deposit_proof_path.is_not(None),
+                or_(
+                    User.state == "DEPOSIT_UNDER_REVIEW",
+                    User.deposit_submitted_at.is_not(None),
+                    User.deposit_proof_path.is_not(None),
+                ),
             )
         ) or 0
         return total, deposit, risk, premium, pending_deposits
@@ -352,9 +328,13 @@ def pending_deposit_users() -> list[User]:
             select(User)
             .where(
                 User.deposit_confirmed.is_(False),
-                User.deposit_proof_path.is_not(None),
+                or_(
+                    User.state == "DEPOSIT_UNDER_REVIEW",
+                    User.deposit_submitted_at.is_not(None),
+                    User.deposit_proof_path.is_not(None),
+                ),
             )
-            .order_by(User.created_at.desc())
+            .order_by(User.deposit_submitted_at.desc().nullslast(), User.created_at.desc())
         ).scalars().all()
         return rows
 
@@ -401,7 +381,8 @@ else:
                 Username: @{user.username if user.username else "-"}<br>
                 Language: {user.language or "-"}<br>
                 Current State: {getattr(user, "state", "-") or "-"}<br>
-                Deposit Proof Type: {user.deposit_proof_file_type or "-"}
+                Deposit Proof Type: {user.deposit_proof_file_type or "-"}<br>
+                Deposit Submitted At: {getattr(user, "deposit_submitted_at", "-") or "-"}
             </div>
             """,
             unsafe_allow_html=True,
