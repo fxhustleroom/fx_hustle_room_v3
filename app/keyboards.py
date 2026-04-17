@@ -36,6 +36,15 @@ def yes_no_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def admin_deposit_keyboard(user_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Approve Deposit", callback_data=f"admin:deposit:approve:{user_id}")],
+            [InlineKeyboardButton(text="Reject Deposit", callback_data=f"admin:deposit:reject:{user_id}")],
+        ]
+    )
+
+
 def admin_trade_keyboard(user_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
