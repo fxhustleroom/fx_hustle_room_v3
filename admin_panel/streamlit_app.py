@@ -398,7 +398,7 @@ else:
 
         a1, a2 = st.columns(2)
         with a1:
-            if st.button("Approve Deposit", key=f"approve_deposit_{user.telegram_id}", use_container_width=True):
+            if st.button("Approve Deposit", key=f"approve_deposit_{user.telegram_id}", width="stretch"):
                 if approve_deposit(int(user.telegram_id)):
                     st.success(f"Deposit approved for {user_display_name(user)}")
                     st.rerun()
@@ -406,7 +406,7 @@ else:
                     st.error("User not found.")
 
         with a2:
-            if st.button("Reject Deposit", key=f"reject_deposit_{user.telegram_id}", use_container_width=True):
+            if st.button("Reject Deposit", key=f"reject_deposit_{user.telegram_id}", width="stretch"):
                 if reject_deposit(int(user.telegram_id)):
                     st.warning(f"Deposit rejected for {user_display_name(user)}")
                     st.rerun()
@@ -422,7 +422,7 @@ search = st.text_input("Search by username, full name, or Telegram ID")
 df = load_users(search)
 
 if not df.empty:
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
 else:
     st.info("No users found.")
 st.markdown("</div>", unsafe_allow_html=True)
