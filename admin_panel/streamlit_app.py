@@ -197,6 +197,7 @@ def load_users(search: str = "") -> pd.DataFrame:
                     "premium_status": "Active" if u.premium_active else "Pending",
                     "join_date": u.created_at,
                     "state": getattr(u, "state", "") or "",
+                    "deposit_submitted_at": getattr(u, "deposit_submitted_at", None),
                     "deposit_proof_type": u.deposit_proof_file_type or "",
                     "trade_proof_type": u.first_trade_proof_file_type or "",
                 }
@@ -252,12 +253,8 @@ def approve_deposit(telegram_id: int) -> bool:
             return False
 
         user.deposit_confirmed = True
-
-        if hasattr(user, "deposit_approved_at"):
-            user.deposit_approved_at = datetime.now(timezone.utc)
-
-        if hasattr(user, "state"):
-            user.state = "RISK_STEP"
+        user.deposit_approved_at = datetime.now(timezone.utc)
+        user.state = "RISK_STEP"
 
         session.commit()
         return True
@@ -273,9 +270,8 @@ def reject_deposit(telegram_id: int) -> bool:
             return False
 
         user.deposit_confirmed = False
-
-        if hasattr(user, "state"):
-            user.state = "WAITING_DEPOSIT_PROOF"
+        user.deposit_approved_at = None
+        user.state = "WAITING_DEPOSIT_PROOF"
 
         session.commit()
         return True
@@ -293,12 +289,8 @@ def activate_premium(telegram_id: int) -> bool:
         user.deposit_confirmed = True
         user.risk_completed = True
         user.premium_active = True
-
-        if hasattr(user, "premium_activated_at"):
-            user.premium_activated_at = datetime.now(timezone.utc)
-
-        if hasattr(user, "state"):
-            user.state = "PREMIUM_ACTIVE"
+        user.premium_activated_at = datetime.now(timezone.utc)
+        user.state = "PREMIUM_ACTIVE"
 
         session.commit()
         return True
@@ -314,9 +306,7 @@ def deactivate_premium(telegram_id: int) -> bool:
             return False
 
         user.premium_active = False
-
-        if hasattr(user, "state"):
-            user.state = "RISK_STEP" if user.deposit_confirmed else "WAITING_DEPOSIT_PROOF"
+        user.state = "RISK_STEP" if user.deposit_confirmed else "WAITING_DEPOSIT_PROOF"
 
         session.commit()
         return True
@@ -337,6 +327,29 @@ def pending_deposit_users() -> list[User]:
             .order_by(User.deposit_submitted_at.desc().nullslast(), User.created_at.desc())
         ).scalars().all()
         return rows
+
+
+def debug_deposit_rows() -> pd.DataFrame:
+    with Session(engine) as session:
+        rows = session.execute(
+            select(User).order_by(User.created_at.desc())
+        ).scalars().all()
+
+        data = []
+        for u in rows:
+            data.append(
+                {
+                    "telegram_id": u.telegram_id,
+                    "username": u.username or "",
+                    "state": u.state,
+                    "deposit_confirmed": u.deposit_confirmed,
+                    "deposit_submitted_at": u.deposit_submitted_at,
+                    "deposit_proof_path": u.deposit_proof_path,
+                    "deposit_proof_file_type": u.deposit_proof_file_type,
+                    "created_at": u.created_at,
+                }
+            )
+        return pd.DataFrame(data)
 
 
 st.markdown(
@@ -487,3 +500,13 @@ with right:
                 "These are Telegram file IDs. The bot can resend them, but Streamlit cannot render Telegram-hosted files directly."
             )
     st.markdown("</div>", unsafe_allow_html=True)
+
+st.markdown('<div class="section-card">', unsafe_allow_html=True)
+st.subheader("Debug Deposit State")
+st.caption("Use this to confirm what the bot is actually saving to the database.")
+debug_df = debug_deposit_rows()
+if not debug_df.empty:
+    st.dataframe(debug_df, width="stretch", hide_index=True)
+else:
+    st.info("No users found.")
+st.markdown("</div>", unsafe_allow_html=True)
