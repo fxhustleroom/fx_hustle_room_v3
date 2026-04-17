@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
@@ -9,7 +10,7 @@ if str(ROOT_DIR) not in sys.path:
 
 import pandas as pd
 import streamlit as st
-from sqlalchemy import String, create_engine, func, select
+from sqlalchemy import String, create_engine, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -22,7 +23,6 @@ st.set_page_config(
 )
 
 engine = create_engine(settings.database_url, future=True)
-
 
 st.markdown(
     """
@@ -38,7 +38,7 @@ st.markdown(
     .block-container {
         padding-top: 1.5rem;
         padding-bottom: 2rem;
-        max-width: 1400px;
+        max-width: 1420px;
     }
 
     .hero-card {
@@ -101,6 +101,55 @@ st.markdown(
         margin-bottom: 18px;
     }
 
+    .action-card {
+        background: linear-gradient(180deg, rgba(15, 21, 40, 0.98), rgba(8, 12, 24, 0.95));
+        border: 1px solid rgba(120, 145, 255, 0.16);
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 14px;
+    }
+
+    .user-name {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 0.2rem;
+    }
+
+    .user-meta {
+        color: #9fb3d9;
+        font-size: 0.92rem;
+        line-height: 1.6;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.28rem 0.62rem;
+        border-radius: 999px;
+        font-size: 0.76rem;
+        font-weight: 700;
+        margin-right: 6px;
+        margin-top: 4px;
+    }
+
+    .badge-ok {
+        background: rgba(27, 212, 164, 0.14);
+        color: #7cf7d4;
+        border: 1px solid rgba(124, 247, 212, 0.20);
+    }
+
+    .badge-warn {
+        background: rgba(255, 183, 77, 0.12);
+        color: #ffce73;
+        border: 1px solid rgba(255, 183, 77, 0.18);
+    }
+
+    .badge-danger {
+        background: rgba(255, 90, 95, 0.12);
+        color: #ff8a8f;
+        border: 1px solid rgba(255, 90, 95, 0.20);
+    }
+
     .stTextInput > div > div > input,
     .stNumberInput input,
     .stSelectbox div[data-baseweb="select"] > div {
@@ -127,40 +176,25 @@ st.markdown(
         border: 1px solid rgba(125, 152, 255, 0.14) !important;
     }
 
-    .status-pill {
-        display: inline-block;
-        padding: 0.35rem 0.7rem;
-        border-radius: 999px;
-        font-size: 0.76rem;
-        font-weight: 700;
-        margin-right: 6px;
-    }
-
-    .ok-pill {
-        background: rgba(27, 212, 164, 0.14);
-        color: #7cf7d4;
-        border: 1px solid rgba(124, 247, 212, 0.20);
-    }
-
-    .warn-pill {
-        background: rgba(255, 183, 77, 0.12);
-        color: #ffce73;
-        border: 1px solid rgba(255, 183, 77, 0.18);
-    }
-
-    .danger-pill {
-        background: rgba(255, 90, 95, 0.12);
-        color: #ff8a8f;
-        border: 1px solid rgba(255, 90, 95, 0.20);
-    }
-
     h2, h3 {
         color: #f8fbff !important;
+    }
+
+    hr {
+        border-color: rgba(255,255,255,0.08);
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+
+def user_display_name(user: User) -> str:
+    if getattr(user, "full_name", None):
+        return str(user.full_name)
+    if getattr(user, "username", None):
+        return f"@{user.username}"
+    return f"User {user.telegram_id}"
 
 
 def load_users(search: str = "") -> pd.DataFrame:
@@ -169,29 +203,28 @@ def load_users(search: str = "") -> pd.DataFrame:
         if search:
             term = f"%{search}%"
             stmt = stmt.where(
-                (User.username.ilike(term))
-                | (User.full_name.ilike(term))
-                | (User.telegram_id.cast(String).ilike(term))
+                or_(
+                    User.username.ilike(term),
+                    User.full_name.ilike(term),
+                    User.telegram_id.cast(String).ilike(term),
+                )
             )
 
         rows = session.execute(stmt.order_by(User.created_at.desc())).scalars().all()
 
         data = []
         for u in rows:
-            access_status = "Premium" if u.premium_active else "Pending"
-            deposit_status = "Approved" if u.deposit_confirmed else "Pending"
-            risk_status = "Completed" if u.risk_completed else "Pending"
-
             data.append(
                 {
                     "telegram_id": u.telegram_id,
                     "username": u.username or "",
                     "full_name": u.full_name or "",
-                    "language": u.language,
-                    "deposit_status": deposit_status,
-                    "risk_status": risk_status,
-                    "premium_status": access_status,
+                    "language": u.language or "",
+                    "deposit_status": "Approved" if u.deposit_confirmed else "Pending",
+                    "risk_status": "Completed" if u.risk_completed else "Pending",
+                    "premium_status": "Active" if u.premium_active else "Pending",
                     "join_date": u.created_at,
+                    "state": getattr(u, "state", "") or "",
                     "deposit_proof_type": u.deposit_proof_file_type or "",
                     "trade_proof_type": u.first_trade_proof_file_type or "",
                 }
@@ -200,48 +233,25 @@ def load_users(search: str = "") -> pd.DataFrame:
         return pd.DataFrame(data)
 
 
-def metric_counts() -> tuple[int, int, int, int]:
+def metric_counts() -> tuple[int, int, int, int, int]:
     with Session(engine) as session:
         total = session.scalar(select(func.count()).select_from(User)) or 0
-        deposit = (
-            session.scalar(
-                select(func.count()).select_from(User).where(User.deposit_confirmed.is_(True))
+        deposit = session.scalar(
+            select(func.count()).select_from(User).where(User.deposit_confirmed.is_(True))
+        ) or 0
+        risk = session.scalar(
+            select(func.count()).select_from(User).where(User.risk_completed.is_(True))
+        ) or 0
+        premium = session.scalar(
+            select(func.count()).select_from(User).where(User.premium_active.is_(True))
+        ) or 0
+        pending_deposits = session.scalar(
+            select(func.count()).select_from(User).where(
+                User.deposit_confirmed.is_(False),
+                User.deposit_proof_path.is_not(None),
             )
-            or 0
-        )
-        risk = (
-            session.scalar(
-                select(func.count()).select_from(User).where(User.risk_completed.is_(True))
-            )
-            or 0
-        )
-        premium = (
-            session.scalar(
-                select(func.count()).select_from(User).where(User.premium_active.is_(True))
-            )
-            or 0
-        )
-        return total, deposit, risk, premium
-
-
-def manual_update(telegram_id: int, field: str, value: bool) -> bool:
-    with Session(engine) as session:
-        user = session.execute(
-            select(User).where(User.telegram_id == telegram_id)
-        ).scalar_one_or_none()
-
-        if not user:
-            return False
-
-        setattr(user, field, value)
-
-        # premium access now depends on deposit + risk only
-        if field == "premium_active" and value:
-            user.deposit_confirmed = True
-            user.risk_completed = True
-
-        session.commit()
-        return True
+        ) or 0
+        return total, deposit, risk, premium, pending_deposits
 
 
 def proof_ids(telegram_id: int) -> tuple[str | None, str | None]:
@@ -256,26 +266,174 @@ def proof_ids(telegram_id: int) -> tuple[str | None, str | None]:
         return user.deposit_proof_path, user.first_trade_proof_path
 
 
+def approve_deposit(telegram_id: int) -> bool:
+    with Session(engine) as session:
+        user = session.execute(
+            select(User).where(User.telegram_id == telegram_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return False
+
+        user.deposit_confirmed = True
+
+        if hasattr(user, "deposit_approved_at"):
+            user.deposit_approved_at = datetime.now(timezone.utc)
+
+        if hasattr(user, "state"):
+            user.state = "RISK_STEP"
+
+        session.commit()
+        return True
+
+
+def reject_deposit(telegram_id: int) -> bool:
+    with Session(engine) as session:
+        user = session.execute(
+            select(User).where(User.telegram_id == telegram_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return False
+
+        user.deposit_confirmed = False
+
+        if hasattr(user, "state"):
+            user.state = "WAITING_DEPOSIT_PROOF"
+
+        session.commit()
+        return True
+
+
+def activate_premium(telegram_id: int) -> bool:
+    with Session(engine) as session:
+        user = session.execute(
+            select(User).where(User.telegram_id == telegram_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return False
+
+        user.deposit_confirmed = True
+        user.risk_completed = True
+        user.premium_active = True
+
+        if hasattr(user, "premium_activated_at"):
+            user.premium_activated_at = datetime.now(timezone.utc)
+
+        if hasattr(user, "state"):
+            user.state = "PREMIUM_ACTIVE"
+
+        session.commit()
+        return True
+
+
+def deactivate_premium(telegram_id: int) -> bool:
+    with Session(engine) as session:
+        user = session.execute(
+            select(User).where(User.telegram_id == telegram_id)
+        ).scalar_one_or_none()
+
+        if not user:
+            return False
+
+        user.premium_active = False
+
+        if hasattr(user, "state"):
+            user.state = "RISK_STEP" if user.deposit_confirmed else "WAITING_DEPOSIT_PROOF"
+
+        session.commit()
+        return True
+
+
+def pending_deposit_users() -> list[User]:
+    with Session(engine) as session:
+        rows = session.execute(
+            select(User)
+            .where(
+                User.deposit_confirmed.is_(False),
+                User.deposit_proof_path.is_not(None),
+            )
+            .order_by(User.created_at.desc())
+        ).scalars().all()
+        return rows
+
+
 st.markdown(
     """
     <div class="hero-card">
         <div class="mini-label">Admin Dashboard</div>
         <div class="hero-title">FX Hustle Room Control Center</div>
         <div class="hero-subtitle">
-            Manage user onboarding, deposit approval, risk-step completion, premium activation,
-            and proof lookup from a cleaner web3-style dashboard.
+            Review pending deposit uploads, approve or reject requests, activate premium,
+            and inspect proof file IDs from one cleaner web3-style dashboard.
         </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-total, deposit, risk, premium = metric_counts()
-col1, col2, col3, col4 = st.columns(4)
+total, deposit, risk, premium, pending_deposits_count = metric_counts()
+col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric("Total Users", total)
 col2.metric("Deposit Approved", deposit)
 col3.metric("Risk Completed", risk)
 col4.metric("Premium Active", premium)
+col5.metric("Pending Deposits", pending_deposits_count)
+
+st.markdown('<div class="section-card">', unsafe_allow_html=True)
+st.subheader("Pending Deposit Approvals")
+st.caption("Users who uploaded a deposit proof but are still waiting for admin review.")
+
+pending_users = pending_deposit_users()
+
+if not pending_users:
+    st.success("No pending deposit approvals right now.")
+else:
+    for user in pending_users:
+        st.markdown('<div class="action-card">', unsafe_allow_html=True)
+
+        st.markdown(
+            f"""
+            <div class="user-name">{user_display_name(user)}</div>
+            <div class="user-meta">
+                Telegram ID: {user.telegram_id}<br>
+                Username: @{user.username if user.username else "-"}<br>
+                Language: {user.language or "-"}<br>
+                Current State: {getattr(user, "state", "-") or "-"}<br>
+                Deposit Proof Type: {user.deposit_proof_file_type or "-"}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        deposit_proof = user.deposit_proof_path or "-"
+        trade_proof = user.first_trade_proof_path or "-"
+
+        st.code(
+            f"deposit_proof_file_id: {deposit_proof}\nfirst_trade_proof_file_id: {trade_proof}",
+            language="text",
+        )
+
+        a1, a2 = st.columns(2)
+        with a1:
+            if st.button("Approve Deposit", key=f"approve_deposit_{user.telegram_id}", use_container_width=True):
+                if approve_deposit(int(user.telegram_id)):
+                    st.success(f"Deposit approved for {user_display_name(user)}")
+                    st.rerun()
+                else:
+                    st.error("User not found.")
+
+        with a2:
+            if st.button("Reject Deposit", key=f"reject_deposit_{user.telegram_id}", use_container_width=True):
+                if reject_deposit(int(user.telegram_id)):
+                    st.warning(f"Deposit rejected for {user_display_name(user)}")
+                    st.rerun()
+                else:
+                    st.error("User not found.")
+
+        st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown('<div class="section-card">', unsafe_allow_html=True)
 st.subheader("User Explorer")
@@ -292,26 +450,30 @@ left, right = st.columns([1.15, 0.85])
 
 with left:
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.subheader("Manual Actions")
-    st.caption("Trade approval has been removed from this admin page.")
+    st.subheader("Premium Access Control")
+    st.caption("Deposit approval is now handled from the pending approvals section above.")
 
-    with st.form("manual_actions"):
+    with st.form("premium_actions"):
         telegram_id = st.number_input("Telegram ID", min_value=1, step=1, format="%d")
         action = st.selectbox(
             "Action",
             [
-                "deposit_confirmed",
-                "risk_completed",
-                "premium_active",
+                "activate_premium",
+                "deactivate_premium",
             ],
         )
-        value = st.checkbox("Set value to True", value=True)
-        submitted = st.form_submit_button("Apply Update")
+        submitted = st.form_submit_button("Apply Action")
 
         if submitted:
-            ok = manual_update(int(telegram_id), action, value)
+            ok = False
+            if action == "activate_premium":
+                ok = activate_premium(int(telegram_id))
+            elif action == "deactivate_premium":
+                ok = deactivate_premium(int(telegram_id))
+
             if ok:
                 st.success("User updated successfully.")
+                st.rerun()
             else:
                 st.error("User not found.")
     st.markdown("</div>", unsafe_allow_html=True)
