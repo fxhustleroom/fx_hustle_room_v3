@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 import sys
@@ -10,11 +11,14 @@ if str(ROOT_DIR) not in sys.path:
 
 import pandas as pd
 import streamlit as st
+from aiogram import Bot
 from sqlalchemy import String, create_engine, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.keyboards import join_premium_keyboard, yes_no_keyboard
 from app.models import User
+from app.texts import t
 
 st.set_page_config(
     page_title="FX Hustle Room Admin",
@@ -243,73 +247,139 @@ def proof_ids(telegram_id: int) -> tuple[str | None, str | None]:
         return user.deposit_proof_path, user.first_trade_proof_path
 
 
-def approve_deposit(telegram_id: int) -> bool:
+async def send_deposit_approved_message(user_id: int, language: str) -> None:
+    bot = Bot(token=settings.bot_token)
+    try:
+        await bot.send_message(
+            user_id,
+            t("deposit_approved", language),
+            reply_markup=yes_no_keyboard(),
+        )
+    finally:
+        await bot.session.close()
+
+
+async def send_deposit_rejected_message(user_id: int, language: str) -> None:
+    bot = Bot(token=settings.bot_token)
+    try:
+        await bot.send_message(
+            user_id,
+            t("deposit_rejected", language),
+        )
+    finally:
+        await bot.session.close()
+
+
+async def send_premium_granted_message(user_id: int, language: str) -> None:
+    bot = Bot(token=settings.bot_token)
+    try:
+        if settings.premium_group_invite_link:
+            await bot.send_message(
+                user_id,
+                t("premium_granted", language),
+                reply_markup=join_premium_keyboard(settings.premium_group_invite_link),
+            )
+        else:
+            await bot.send_message(
+                user_id,
+                t("premium_granted", language),
+            )
+    finally:
+        await bot.session.close()
+
+
+def approve_deposit(telegram_id: int) -> tuple[bool, str]:
     with Session(engine) as session:
         user = session.execute(
             select(User).where(User.telegram_id == telegram_id)
         ).scalar_one_or_none()
 
         if not user:
-            return False
+            return False, "User not found."
 
         user.deposit_confirmed = True
         user.deposit_approved_at = datetime.now(timezone.utc)
         user.state = "RISK_STEP"
+        user_language = user.language or "en"
+        user_id = user.telegram_id
 
         session.commit()
-        return True
+
+    try:
+        asyncio.run(send_deposit_approved_message(user_id, user_language))
+    except Exception as e:
+        return False, f"Deposit saved, but Telegram notify failed: {e}"
+
+    return True, "Deposit approved and user notified."
 
 
-def reject_deposit(telegram_id: int) -> bool:
+def reject_deposit(telegram_id: int) -> tuple[bool, str]:
     with Session(engine) as session:
         user = session.execute(
             select(User).where(User.telegram_id == telegram_id)
         ).scalar_one_or_none()
 
         if not user:
-            return False
+            return False, "User not found."
 
         user.deposit_confirmed = False
         user.deposit_approved_at = None
         user.state = "WAITING_DEPOSIT_PROOF"
+        user_language = user.language or "en"
+        user_id = user.telegram_id
 
         session.commit()
-        return True
+
+    try:
+        asyncio.run(send_deposit_rejected_message(user_id, user_language))
+    except Exception as e:
+        return False, f"Rejection saved, but Telegram notify failed: {e}"
+
+    return True, "Deposit rejected and user notified."
 
 
-def activate_premium(telegram_id: int) -> bool:
+def activate_premium(telegram_id: int) -> tuple[bool, str]:
     with Session(engine) as session:
         user = session.execute(
             select(User).where(User.telegram_id == telegram_id)
         ).scalar_one_or_none()
 
         if not user:
-            return False
+            return False, "User not found."
 
         user.deposit_confirmed = True
         user.risk_completed = True
         user.premium_active = True
         user.premium_activated_at = datetime.now(timezone.utc)
         user.state = "PREMIUM_ACTIVE"
+        user_language = user.language or "en"
+        user_id = user.telegram_id
 
         session.commit()
-        return True
+
+    try:
+        asyncio.run(send_premium_granted_message(user_id, user_language))
+    except Exception as e:
+        return False, f"Premium saved, but Telegram notify failed: {e}"
+
+    return True, "Premium activated and user notified."
 
 
-def deactivate_premium(telegram_id: int) -> bool:
+def deactivate_premium(telegram_id: int) -> tuple[bool, str]:
     with Session(engine) as session:
         user = session.execute(
             select(User).where(User.telegram_id == telegram_id)
         ).scalar_one_or_none()
 
         if not user:
-            return False
+            return False, "User not found."
 
         user.premium_active = False
         user.state = "RISK_STEP" if user.deposit_confirmed else "WAITING_DEPOSIT_PROOF"
 
         session.commit()
-        return True
+
+    return True, "Premium deactivated."
 
 
 def pending_deposit_users() -> list[User]:
@@ -412,19 +482,21 @@ else:
         a1, a2 = st.columns(2)
         with a1:
             if st.button("Approve Deposit", key=f"approve_deposit_{user.telegram_id}", width="stretch"):
-                if approve_deposit(int(user.telegram_id)):
-                    st.success(f"Deposit approved for {user_display_name(user)}")
+                ok, msg = approve_deposit(int(user.telegram_id))
+                if ok:
+                    st.success(msg)
                     st.rerun()
                 else:
-                    st.error("User not found.")
+                    st.error(msg)
 
         with a2:
             if st.button("Reject Deposit", key=f"reject_deposit_{user.telegram_id}", width="stretch"):
-                if reject_deposit(int(user.telegram_id)):
-                    st.warning(f"Deposit rejected for {user_display_name(user)}")
+                ok, msg = reject_deposit(int(user.telegram_id))
+                if ok:
+                    st.warning(msg)
                     st.rerun()
                 else:
-                    st.error("User not found.")
+                    st.error(msg)
 
         st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
@@ -460,16 +532,17 @@ with left:
 
         if submitted:
             ok = False
+            msg = "Unknown action."
             if action == "activate_premium":
-                ok = activate_premium(int(telegram_id))
+                ok, msg = activate_premium(int(telegram_id))
             elif action == "deactivate_premium":
-                ok = deactivate_premium(int(telegram_id))
+                ok, msg = deactivate_premium(int(telegram_id))
 
             if ok:
-                st.success("User updated successfully.")
+                st.success(msg)
                 st.rerun()
             else:
-                st.error("User not found.")
+                st.error(msg)
     st.markdown("</div>", unsafe_allow_html=True)
 
 with right:
