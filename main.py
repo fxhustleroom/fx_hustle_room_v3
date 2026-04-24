@@ -9,6 +9,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import Update
 from fastapi import Depends, FastAPI, Request
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,9 +23,7 @@ from app.handlers.admin import router as admin_router
 from app.handlers.signals import IncomingSignal, persist_signal, send_signal_to_premium_group
 
 
-# --------------------------------------------------
-# Setup
-# --------------------------------------------------
+# ---------------- SETUP ----------------
 
 settings.ensure_dirs()
 
@@ -32,9 +31,7 @@ logger.remove()
 logger.add(lambda msg: print(msg, end=""), level=settings.log_level)
 
 
-# --------------------------------------------------
-# Telegram bot
-# --------------------------------------------------
+# ---------------- BOT ----------------
 
 bot = Bot(
     token=settings.bot_token,
@@ -50,23 +47,18 @@ dp.include_router(admin_router)
 dp.update.middleware(DbSessionMiddleware())
 
 
-# --------------------------------------------------
-# Database dependency
-# --------------------------------------------------
+# ---------------- DB ----------------
 
 async def get_db_session():
     async with AsyncSessionLocal() as session:
         yield session
 
 
-# --------------------------------------------------
-# FastAPI lifespan
-# --------------------------------------------------
+# ---------------- LIFESPAN ----------------
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 
-    # Init DB
     try:
         await init_db()
         logger.info("Database initialized")
@@ -75,9 +67,6 @@ async def lifespan(app: FastAPI):
 
     polling_task = None
 
-    # -----------------------------
-    # PRODUCTION → WEBHOOK
-    # -----------------------------
     if settings.app_base_url.startswith("https"):
 
         webhook_url = f"{settings.app_base_url}/telegram/webhook"
@@ -87,9 +76,6 @@ async def lifespan(app: FastAPI):
 
         logger.info(f"Webhook set: {webhook_url}")
 
-    # -----------------------------
-    # LOCAL DEV → POLLING
-    # -----------------------------
     else:
 
         logger.info("Running locally — starting polling")
@@ -100,9 +86,6 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # -----------------------------
-    # Shutdown
-    # -----------------------------
     logger.info("Shutting down bot")
 
     if polling_task:
@@ -111,9 +94,7 @@ async def lifespan(app: FastAPI):
     await bot.session.close()
 
 
-# --------------------------------------------------
-# FastAPI app
-# --------------------------------------------------
+# ---------------- FASTAPI ----------------
 
 app = FastAPI(
     title="FX Hustle Room API",
@@ -126,23 +107,21 @@ async def health():
     return {"status": "ok"}
 
 
-# --------------------------------------------------
-# TELEGRAM WEBHOOK
-# --------------------------------------------------
+# ---------------- TELEGRAM WEBHOOK ----------------
 
 @app.post("/telegram/webhook")
 async def telegram_webhook(request: Request):
 
-    update = await request.json()
+    data = await request.json()
 
-    await dp.feed_webhook_update(bot, update)
+    update = Update.model_validate(data)  # ✅ FIX
+
+    await dp.feed_update(bot, update)  # ✅ FIX
 
     return {"ok": True}
 
 
-# --------------------------------------------------
-# TRADING SIGNAL WEBHOOK
-# --------------------------------------------------
+# ---------------- SIGNAL WEBHOOK ----------------
 
 @app.post("/webhook/signal")
 async def webhook_signal(
@@ -160,9 +139,7 @@ async def webhook_signal(
     }
 
 
-# --------------------------------------------------
-# Start server
-# --------------------------------------------------
+# ---------------- START ----------------
 
 if __name__ == "__main__":
 
